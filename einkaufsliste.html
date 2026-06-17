@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Einkaufsliste</title>
+  <link rel="manifest" href="manifest.json"/>
+  <meta name="apple-mobile-web-app-capable" content="yes"/>
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+  <meta name="apple-mobile-web-app-title" content="Einkaufsliste"/>
+  <link rel="apple-touch-icon" href="icon-192.png"/>
+  <meta name="theme-color" content="#1a1a1a" id="theme-meta"/>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+  <style>
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    input,select,textarea{font-size:16px!important;-webkit-text-size-adjust:100%}
+    :root{
+      --bg:#f5f5f3;--surface:#fff;--border:#e8e8e4;--text:#1a1a1a;--muted:#8a8a85;
+      --green:#2d7a4f;--green-light:#eaf4ee;
+      --accent:#5b9bd5;--accent-light:#e8f4fd;--accent-border:#a8d0f0;--accent-dark:#2e75b6;
+      --deal-bg:#fff3e0;--deal-border:#ffcc80;--deal-color:#b35900;--deal-badge:#ff9800;
+      --percent-bg:#ffe8e8;--percent-border:#ffb3b3;--percent-color:#c0392b;
+      --done-bg:#eaf4ee;
+    }
+    body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:1.5rem 1rem 5rem}
+
+    /* ── APP ── */
+    #app{display:block}
+
+    /* ── HEADER ── */
+    header{max-width:800px;margin:0 auto 1.25rem;display:flex;align-items:center;justify-content:space-between;border-bottom:1.5px solid var(--border);padding-bottom:1.25rem;gap:1rem;flex-wrap:wrap}
+    header h1{font-size:1.4rem;font-weight:600;letter-spacing:-.03em}
+    header h1 span{color:var(--muted);font-weight:300}
+
+    /* ── TABS ── */
+    .main-tabs{max-width:800px;margin:0 auto 1.25rem;display:flex;gap:.5rem;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:.3rem}
+    .main-tab{flex:1;padding:.55rem .5rem;border-radius:10px;border:none;background:none;font-family:'DM Sans',sans-serif;font-size:.85rem;font-weight:600;color:var(--muted);cursor:pointer;display:flex;align-items:center;justify-content:center;gap:.4rem}
+    .main-tab.active{background:var(--accent-light);color:var(--accent-dark)}
+    .tab-content{display:none}
+    .tab-content.active{display:block}
+
+    /* ── EINKAUFSLISTE ── */
+    .list-add-row{max-width:800px;margin:0 auto 1rem;display:flex;gap:.5rem}
+    .list-add-input{flex:1;font-size:16px!important;border:1.5px solid var(--border);border-radius:12px;padding:.7rem 1rem;outline:none;font-family:'DM Sans',sans-serif;background:var(--surface)}
+    .list-add-input:focus{border-color:var(--accent)}
+    .list-add-btn{font-size:.85rem;font-weight:600;border:none;border-radius:12px;padding:.7rem 1.2rem;background:var(--text);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0}
+
+    .list-section{max-width:800px;margin:0 auto 1rem}
+    .list-section-title{font-size:.62rem;font-family:'DM Mono',monospace;text-transform:uppercase;letter-spacing:.1em;color:var(--muted);padding:0 .25rem .5rem}
+    .list-item{display:flex;align-items:center;gap:.7rem;background:var(--surface);border:1.5px solid var(--border);border-radius:12px;padding:.7rem .9rem;margin-bottom:.5rem;transition:all .2s}
+    .list-item.done{background:var(--done-bg);border-color:#b6dfc7;opacity:.65}
+    .list-check{width:22px;height:22px;border-radius:50%;border:1.5px solid var(--border);background:#fff;display:flex;align-items:center;justify-content:center;flex-shrink:0;cursor:pointer}
+    .list-item.done .list-check{background:var(--green);border-color:var(--green)}
+    .list-check svg{display:none}
+    .list-item.done .list-check svg{display:block}
+    .list-item-name{flex:1;font-size:.92rem}
+    .list-item.done .list-item-name{text-decoration:line-through;color:var(--muted)}
+    .list-item-deal{font-size:.65rem;font-family:'DM Mono',monospace;font-weight:600;background:var(--deal-bg);color:var(--deal-color);border:1px solid var(--deal-border);padding:.15rem .5rem;border-radius:99px;white-space:nowrap;cursor:pointer}
+    .list-item-del{color:#ccc;background:none;border:none;cursor:pointer;font-size:.9rem;padding:.2rem .3rem;flex-shrink:0}
+    .list-item-del:hover{color:#e05050}
+    .list-empty{max-width:800px;margin:0 auto;text-align:center;padding:3rem 1rem;color:var(--muted);font-size:.9rem}
+
+    /* ── ANGEBOTE / SUCHE ── */
+    .search-row{max-width:800px;margin:0 auto 1rem;display:flex;gap:.5rem;align-items:center}
+    .search-input{flex:1;font-size:16px!important;border:1.5px solid var(--border);border-radius:12px;padding:.7rem 1rem;outline:none;font-family:'DM Sans',sans-serif;background:var(--surface)}
+    .search-input:focus{border-color:var(--accent)}
+    .search-btn{font-size:.85rem;font-weight:600;border:none;border-radius:12px;padding:.7rem 1.2rem;background:var(--accent);color:#fff;cursor:pointer;font-family:'DM Sans',sans-serif;flex-shrink:0}
+    .search-btn:disabled{opacity:.5;cursor:default}
+
+    .zip-row{max-width:800px;margin:0 auto 1rem;display:flex;align-items:center;gap:.5rem;font-size:.78rem;color:var(--muted)}
+    .zip-input{width:80px;font-size:16px!important;border:1.5px solid var(--border);border-radius:8px;padding:.3rem .5rem;outline:none;font-family:'DM Mono',monospace;background:var(--surface);text-align:center}
+
+    .offer-card{max-width:800px;margin:0 auto .6rem;background:var(--surface);border:1.5px solid var(--border);border-radius:14px;padding:.8rem 1rem;display:flex;align-items:center;gap:.85rem}
+    .offer-img{width:52px;height:52px;border-radius:10px;background:var(--bg);object-fit:contain;flex-shrink:0;border:1px solid var(--border)}
+    .offer-info{flex:1;min-width:0}
+    .offer-title{font-size:.9rem;font-weight:600;line-height:1.25}
+    .offer-meta{font-size:.72rem;color:var(--muted);margin-top:.15rem}
+    .offer-tags{display:flex;gap:.3rem;flex-wrap:wrap;margin-top:.35rem}
+    .offer-tag{font-size:.62rem;font-family:'DM Mono',monospace;font-weight:600;padding:.15rem .45rem;border-radius:99px}
+    .offer-tag.percent{background:var(--percent-bg);color:var(--percent-color);border:1px solid var(--percent-border)}
+    .offer-tag.combo{background:var(--deal-bg);color:var(--deal-color);border:1px solid var(--deal-border)}
+    .offer-price-wrap{text-align:right;flex-shrink:0}
+    .offer-price{font-family:'DM Mono',monospace;font-size:1rem;font-weight:600;color:var(--accent-dark)}
+    .offer-old-price{font-family:'DM Mono',monospace;font-size:.72rem;color:var(--muted);text-decoration:line-through}
+    .offer-add-btn{margin-top:.4rem;font-size:.68rem;font-weight:600;border:1.5px solid var(--accent);color:var(--accent-dark);background:var(--accent-light);border-radius:99px;padding:.2rem .6rem;cursor:pointer;font-family:'DM Sans',sans-serif}
+
+    .search-empty,.search-hint,.search-error{max-width:800px;margin:0 auto;text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:.85rem}
+    .search-error{color:var(--percent-color)}
+    .search-loading{max-width:800px;margin:0 auto;text-align:center;padding:2.5rem 1rem;color:var(--muted);font-size:.85rem;font-family:'DM Mono',monospace}
+
+    .autosave-indicator{max-width:800px;margin:.5rem auto 0;font-size:.68rem;color:var(--muted);font-family:'DM Mono',monospace;text-align:right;padding-right:.25rem;opacity:0;transition:opacity .3s}
+    .autosave-indicator.saving{opacity:1}
+    .autosave-indicator.saved{opacity:1;color:var(--green)}
+  </style>
+  <!-- Firebase (compat SDK) -->
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+</head>
+<body>
+
+<!-- MAIN APP -->
+<div id="app">
+  <header>
+    <h1>Einkaufs<span>liste</span></h1>
+  </header>
+
+  <div class="main-tabs">
+    <button class="main-tab active" id="tab-btn-list" onclick="switchMainTab('list')">🛒 Liste</button>
+    <button class="main-tab" id="tab-btn-deals" onclick="switchMainTab('deals')">🏷️ Angebote</button>
+  </div>
+
+  <!-- EINKAUFSLISTE -->
+  <div class="tab-content active" id="tab-list">
+    <div class="list-add-row">
+      <input class="list-add-input" id="new-item-input" placeholder="Artikel hinzufügen…" onkeydown="if(event.key==='Enter')addListItem()"/>
+      <button class="list-add-btn" onclick="addListItem()">+ Hinzu</button>
+    </div>
+    <div id="list-container"></div>
+  </div>
+
+  <!-- ANGEBOTE -->
+  <div class="tab-content" id="tab-deals">
+    <div class="search-row">
+      <input class="search-input" id="deal-search-input" placeholder="z.B. Milch, Nutella, Bier…" onkeydown="if(event.key==='Enter')searchDeals()"/>
+      <button class="search-btn" id="deal-search-btn" onclick="searchDeals()">Suchen</button>
+    </div>
+    <div class="zip-row">
+      📍 Postleitzahl: <input class="zip-input" id="zip-input" value="8010" onchange="saveZip()"/>
+      <span style="margin-left:.5rem">(Graz)</span>
+    </div>
+    <div id="deals-container">
+      <div class="search-hint">Suche nach einem Produkt, um aktuelle Angebote aus österreichischen Supermärkten zu finden.</div>
+    </div>
+  </div>
+
+  <div class="autosave-indicator" id="autosave-indicator">✓ gespeichert</div>
+</div>
+
+<script>
+// ═══════════════════════════════════════════════════
+// CONFIG
+// ═══════════════════════════════════════════════════
+// Trage hier die URL deiner deployten "offers" Cloud Function ein.
+// Beispiel: https://offers-xxxxxxxxxx-ew.a.run.app
+// oder bei Firebase Functions v2 (europe-west1):
+// https://offers-xxxxxxxxxxxxx-ew.a.run.app
+const OFFERS_FUNCTION_URL = "https://offers-ugbzjrizeq-ew.a.run.app";
+
+const FIREBASE_CONFIG = {
+  apiKey:            "AIzaSyBSmW8zLjOKPJ-ZXgbzPu3NuE4TjHTnmFQ",
+  authDomain:        "gymplan-25578.firebaseapp.com",
+  projectId:         "gymplan-25578",
+  storageBucket:     "gymplan-25578.firebasestorage.app",
+  messagingSenderId: "819050303945",
+  appId:             "1:819050303945:web:9d9aed1a09b8c249309818"
+};
+const CLOUD_ON = FIREBASE_CONFIG.apiKey !== "DEIN_API_KEY" && typeof firebase !== 'undefined';
+let _db = null, _cloudReady = false, _cloudSaveTimer = null;
+
+function cloudInit() {
+  if (!CLOUD_ON) return;
+  try {
+    firebase.initializeApp(FIREBASE_CONFIG);
+    _db = firebase.firestore();
+    _cloudReady = true;
+  } catch(e) { console.log('Cloud init Fehler:', e); _cloudReady = false; }
+}
+
+// ═══════════════════════════════════════════════════
+// STATE
+// Gemeinsame Liste: EIN Dokument in Firestore
+// (collection "shoppinglist", doc "shared")
+// ═══════════════════════════════════════════════════
+let listItems = []; // [{id,name,done,deal:null|{title,price,oldPrice,tags,retailer}}]
+let zip = localStorage.getItem('ep-zip') || '8010';
+
+const LS_KEY = 'ep-shoppinglist';
+
+function loadLocalList() {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) listItems = JSON.parse(raw);
+  } catch(e) { listItems = []; }
+}
+function persistLocal() {
+  localStorage.setItem(LS_KEY, JSON.stringify(listItems));
+}
+
+let _unsub = null;
+function cloudSubscribe() {
+  if (!_cloudReady) return;
+  if (_unsub) _unsub();
+  _unsub = _db.collection('shoppinglist').doc('shared').onSnapshot(doc => {
+    if (doc.exists) {
+      const data = doc.data();
+      if (Array.isArray(data.items)) {
+        listItems = data.items;
+        persistLocal();
+        renderList();
+      }
+    }
+  }, err => console.log('Cloud subscribe Fehler:', err));
+}
+
+function cloudSaveList() {
+  persistLocal();
+  if (!_cloudReady) return;
+  clearTimeout(_cloudSaveTimer);
+  _cloudSaveTimer = setTimeout(() => {
+    _db.collection('shoppinglist').doc('shared').set({
+      items: listItems,
+      updated: Date.now(),
+    }).then(() => {
+      indicate('saved');
+    }).catch(e => console.log('Cloud save Fehler:', e));
+  }, 500);
+}
+
+function indicate(state) {
+  const el = document.getElementById('autosave-indicator');
+  if (state === 'saving') { el.textContent = '● wird gespeichert…'; el.className = 'autosave-indicator saving'; }
+  else { el.textContent = '✓ gespeichert'; el.className = 'autosave-indicator saved'; setTimeout(() => el.className = 'autosave-indicator', 2000); }
+}
+
+function esc(s) { return String(s).replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+
+// ═══════════════════════════════════════════════════
+// TABS
+// ═══════════════════════════════════════════════════
+function switchMainTab(tab) {
+  ['list','deals'].forEach(t => {
+    document.getElementById('tab-'+t).classList.toggle('active', t===tab);
+    document.getElementById('tab-btn-'+t).classList.toggle('active', t===tab);
+  });
+}
+
+// ═══════════════════════════════════════════════════
+// EINKAUFSLISTE
+// ═══════════════════════════════════════════════════
+function addListItem(name, deal) {
+  if (typeof name !== 'string') {
+    const inp = document.getElementById('new-item-input');
+    name = inp.value.trim();
+    if (!name) return;
+    inp.value = '';
+  }
+  // Duplikate vermeiden (case-insensitive)
+  const existing = listItems.find(it => it.name.toLowerCase() === name.toLowerCase() && !it.done);
+  if (existing) {
+    if (deal) existing.deal = deal;
+    cloudSaveList(); renderList();
+    return;
+  }
+  listItems.unshift({
+    id: 'it-' + Date.now() + '-' + Math.floor(Math.random()*1000),
+    name,
+    done: false,
+    deal: deal || null,
+  });
+  indicate('saving');
+  cloudSaveList();
+  renderList();
+}
+
+function toggleItemDone(id) {
+  const it = listItems.find(i => i.id === id);
+  if (!it) return;
+  it.done = !it.done;
+  indicate('saving');
+  cloudSaveList();
+  renderList();
+}
+
+function removeItem(id) {
+  listItems = listItems.filter(i => i.id !== id);
+  indicate('saving');
+  cloudSaveList();
+  renderList();
+}
+
+function renderList() {
+  const con = document.getElementById('list-container');
+  if (!listItems.length) {
+    con.innerHTML = '<div class="list-empty">Deine Einkaufsliste ist leer.<br>Füge oben einen Artikel hinzu.</div>';
+    return;
+  }
+  const open = listItems.filter(i => !i.done);
+  const done = listItems.filter(i => i.done);
+
+  let html = '';
+  if (open.length) {
+    html += '<div class="list-section"><div class="list-section-title">Zu erledigen · ' + open.length + '</div>';
+    open.forEach(it => html += renderListItem(it));
+    html += '</div>';
+  }
+  if (done.length) {
+    html += '<div class="list-section"><div class="list-section-title">Erledigt · ' + done.length + '</div>';
+    done.forEach(it => html += renderListItem(it));
+    html += '</div>';
+  }
+  con.innerHTML = html;
+}
+
+function renderListItem(it) {
+  let dealHtml = '';
+  if (it.deal) {
+    const tagText = (it.deal.tags && it.deal.tags.length) ? it.deal.tags[0] : 'Angebot';
+    const dealTitle = esc((it.deal.retailer||'') + ' · ' + (it.deal.price||'') + '€');
+    dealHtml = '<span class="list-item-deal" data-name="'+esc(it.name)+'" onclick="onDealTagClick(this)" title="'+dealTitle+'">'+esc(tagText)+'</span>';
+  }
+  return '<div class="list-item '+(it.done?'done':'')+'">'
+    + '<div class="list-check" data-id="'+esc(it.id)+'" onclick="toggleItemDone(this.dataset.id)">'
+    +   '<svg width="11" height="11" viewBox="0 0 12 12" fill="none"><path d="M2 6l3 3 5-5" stroke="white" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>'
+    + '</div>'
+    + '<span class="list-item-name">'+esc(it.name)+'</span>'
+    + dealHtml
+    + '<button class="list-item-del" data-id="'+esc(it.id)+'" onclick="removeItem(this.dataset.id)">✕</button>'
+    + '</div>';
+}
+
+// Klick auf das Deal-Tag in der Liste: zur Angebote-Suche wechseln und suchen
+function onDealTagClick(el) {
+  const name = el.dataset.name;
+  switchMainTab('deals');
+  document.getElementById('deal-search-input').value = name;
+  searchDeals();
+}
+
+// ═══════════════════════════════════════════════════
+// ANGEBOTE / SUCHE
+// ═══════════════════════════════════════════════════
+function saveZip() {
+  zip = document.getElementById('zip-input').value.trim() || '8010';
+  localStorage.setItem('ep-zip', zip);
+}
+
+async function searchDeals() {
+  const q = document.getElementById('deal-search-input').value.trim();
+  const con = document.getElementById('deals-container');
+  if (!q) return;
+
+  if (OFFERS_FUNCTION_URL === "DEINE_CLOUD_FUNCTION_URL") {
+    con.innerHTML = '<div class="search-error">⚠️ Die Cloud Function URL wurde noch nicht konfiguriert.<br>Trage sie in <code>OFFERS_FUNCTION_URL</code> im Code ein.</div>';
+    return;
+  }
+
+  document.getElementById('deal-search-btn').disabled = true;
+  con.innerHTML = '<div class="search-loading">🔎 Suche Angebote für „'+esc(q)+'"…</div>';
+
+  try {
+    const url = OFFERS_FUNCTION_URL + '?q=' + encodeURIComponent(q) + '&zip=' + encodeURIComponent(zip) + '&limit=24';
+    const resp = await fetch(url);
+    const data = await resp.json();
+
+    if (!resp.ok) throw new Error(data.error || 'Fehler beim Laden');
+
+    if (!data.offers || !data.offers.length) {
+      con.innerHTML = '<div class="search-empty">Keine aktuellen Angebote für „'+esc(q)+'" gefunden.</div>';
+      return;
+    }
+
+    renderDeals(data.offers, q);
+  } catch(e) {
+    con.innerHTML = '<div class="search-error">Fehler beim Laden der Angebote: '+esc(e.message)+'<br><br>Tipp: Prüfe, ob die Cloud Function erreichbar ist.</div>';
+  } finally {
+    document.getElementById('deal-search-btn').disabled = false;
+  }
+}
+
+function renderDeals(offers, query) {
+  const con = document.getElementById('deals-container');
+  let html = '';
+  // Sortiere: höchster Rabatt zuerst
+  offers.sort((a,b) => {
+    const pa = a.discountPercent || 0, pb = b.discountPercent || 0;
+    return pb - pa;
+  });
+
+  offers.forEach(o => {
+    const tags = (o.dealTags || []).map(t => {
+      const cls = t.startsWith('-') ? 'percent' : 'combo';
+      return '<span class="offer-tag '+cls+'">'+esc(t)+'</span>';
+    }).join('');
+
+    const img = o.image
+      ? '<img class="offer-img" src="'+esc(o.image)+'" alt="" onerror="this.style.display=&quot;none&quot;"/>'
+      : '<div class="offer-img" style="display:flex;align-items:center;justify-content:center;font-size:1.4rem">🛒</div>';
+
+    // Deal-Daten als HTML-escaptes JSON in data-Attribute legen,
+    // damit der Klick-Handler sie sicher per JSON.parse lesen kann.
+    const dealObj   = esc(JSON.stringify({title:o.title, price:o.price, oldPrice:o.oldPrice, tags:o.dealTags, retailer:o.retailer}));
+    const titleAttr = esc(JSON.stringify(o.title));
+
+    html += '<div class="offer-card">'
+      + img
+      + '<div class="offer-info">'
+        + '<div class="offer-title">'+esc(o.title)+(o.brand?' <span style="color:var(--muted);font-weight:400">· '+esc(o.brand)+'</span>':'')+'</div>'
+        + '<div class="offer-meta">'+esc(o.retailer)+(o.unit?' · '+esc(o.unit):'')+(o.validTo?' · gültig bis '+esc(o.validTo):'')+'</div>'
+        + (tags ? '<div class="offer-tags">'+tags+'</div>' : '')
+      + '</div>'
+      + '<div class="offer-price-wrap">'
+        + (o.price ? '<div class="offer-price">€ '+esc(o.price)+'</div>' : '')
+        + (o.oldPrice ? '<div class="offer-old-price">€ '+esc(o.oldPrice)+'</div>' : '')
+        + '<button class="offer-add-btn" data-title="'+titleAttr+'" data-deal="'+dealObj+'" onclick="addListItem(JSON.parse(this.dataset.title), JSON.parse(this.dataset.deal))">+ Liste</button>'
+      + '</div>'
+    + '</div>';
+  });
+
+  con.innerHTML = html;
+}
+
+// ═══════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════
+cloudInit();
+document.getElementById('zip-input').value = zip;
+loadLocalList();
+renderList();
+cloudSubscribe();
+</script>
+</body>
+</html>
